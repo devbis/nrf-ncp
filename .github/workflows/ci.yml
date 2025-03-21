@@ -73,7 +73,7 @@ jobs:
       - name: 🔨 Build Project
         run: |
           cd zephyr-workspace
-          west build nrf/samples/zigbee/ncp  -b $BOARD -Dmcuboot_EXTRA_CONF_FILE=$(pwd)/extra/mcuboot.conf
+          west build nrf/samples/zigbee/ncp  -b $BOARD -- -DSB_CONFIG_BOOTLOADER_MCUBOOT=y -Dmcuboot_EXTRA_CONF_FILE=$(pwd)/extra/mcuboot.conf
           mv build/merged.hex build/ncp-$BOARD-$SDK_VER-$BAUDRATE.hex
 
       - name: Install adafruit-nrfutil
