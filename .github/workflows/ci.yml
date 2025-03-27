@@ -11,6 +11,7 @@ env:
   NCS_ZIGBEE_VER: v0.3.1
   BOARD: nrf52840dk
   BOARD_TARGET: nrf52840dk/nrf52840
+  BOARD_TARGET_NAME: nrf52840dk_nrf52840
   BAUDRATE: 115200
 
 jobs:
@@ -60,9 +61,9 @@ jobs:
 
       - name: 🪁 Apply overlay
         run: |
-          cp zephyr-workspace/extra/$BOARD.overlay zephyr-workspace/ncs-zigbee/samples/ncp/boards/$BOARD.overlay
-          cp zephyr-workspace/extra/$BOARD.conf zephyr-workspace/ncs-zigbee/samples/ncp/boards/$BOARD.conf
-          sed -i "s/current-speed = \<[0-9]+\>;/current-speed = <$BAUDRATE>;/" zephyr-workspace/ncs-zigbee/samples/ncp/boards/$BOARD.overlay
+          cp zephyr-workspace/extra/$BOARD_TARGET_NAME.overlay zephyr-workspace/ncs-zigbee/samples/ncp/boards/$BOARD_TARGET_NAME.overlay
+          cp zephyr-workspace/extra/$BOARD_TARGET_NAME.conf zephyr-workspace/ncs-zigbee/samples/ncp/boards/$BOARD_TARGET_NAME.conf
+          sed -i "s/current-speed = \<[0-9]+\>;/current-speed = <$BAUDRATE>;/" zephyr-workspace/ncs-zigbee/samples/ncp/boards/$BOARD_TARGET_NAME.overlay
 
           echo -e "\n\nzb_uint32_t zb_osif_get_fw_version(void) { return ${SDK_VER_HEX}; }" >> zephyr-workspace/ncs-zigbee/samples/ncp/src/main.c
 
