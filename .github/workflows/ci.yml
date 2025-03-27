@@ -56,6 +56,7 @@ jobs:
         run: |
           mkdir -p zephyr-workspace
           git clone https://github.com/nrfconnect/ncs-zigbee.git zephyr-workspace/ncs-zigbee -b $NCS_ZIGBEE_VER --depth 1
+          sed -i "s/revision: v2.9.0/revision: ${SDK_VER}/g" zephyr-workspace/ncs-zigbee/west.yml
 
       - name: 🪁 Apply overlay
         run: |
