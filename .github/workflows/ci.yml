@@ -6,8 +6,9 @@ on:
   workflow_dispatch:
 
 env:
-  SDK_VER: v3.0.0-preview1
-  SDK_VER_HEX: "0x03000001"
+  SDK_VER: v3.0.0-preview2
+  SDK_VER_HEX: "0x03000002"
+  NCS_ZIGBEE_VER: v0.3.1
   BOARD: nrf52840dk
   BOARD_TARGET: nrf52840dk/nrf52840
   BAUDRATE: 115200
@@ -50,31 +51,32 @@ jobs:
           tar xf zephyr-sdk-0.16.9_linux-x86_64_minimal.tar.xz -C ~/
           ~/zephyr-sdk-0.16.9/setup.sh -c -t arm-zephyr-eabi
 
+      # git clone https://github.com/nrfconnect/sdk-nrf.git zephyr-workspace/nrf -b $SDK_VER --depth 1
       - name: 🪁 Install nRF SDK
         run: |
           mkdir -p zephyr-workspace
-          git clone https://github.com/nrfconnect/sdk-nrf.git zephyr-workspace/nrf -b $SDK_VER --depth 1
+          git clone https://github.com/nrfconnect/ncs-zigbee.git zephyr-workspace/ncs-zigbee -b $NCS_ZIGBEE_VER --depth 1
 
       - name: 🪁 Apply overlay
         run: |
-          cp zephyr-workspace/extra/$BOARD.overlay zephyr-workspace/nrf/samples/zigbee/ncp/boards/$BOARD.overlay
-          cp zephyr-workspace/extra/$BOARD.conf zephyr-workspace/nrf/samples/zigbee/ncp/boards/$BOARD.conf
-          sed -i "s/current-speed = \<[0-9]+\>;/current-speed = <$BAUDRATE>;/" zephyr-workspace/nrf/samples/zigbee/ncp/boards/$BOARD.overlay
+          cp zephyr-workspace/extra/$BOARD.overlay zephyr-workspace/ncs-zigbee/samples/ncp/boards/$BOARD.overlay
+          cp zephyr-workspace/extra/$BOARD.conf zephyr-workspace/ncs-zigbee/samples/ncp/boards/$BOARD.conf
+          sed -i "s/current-speed = \<[0-9]+\>;/current-speed = <$BAUDRATE>;/" zephyr-workspace/ncs-zigbee/samples/ncp/boards/$BOARD.overlay
 
-          echo -e "\n\nzb_uint32_t zb_osif_get_fw_version(void) { return ${SDK_VER_HEX}; }" >> zephyr-workspace/nrf/samples/zigbee/ncp/src/main.c
+          echo -e "\n\nzb_uint32_t zb_osif_get_fw_version(void) { return ${SDK_VER_HEX}; }" >> zephyr-workspace/ncs-zigbee/samples/ncp/src/main.c
 
       - name: ♻️ Initialize Zephyr Workspace
         # Set up the Zephyr workspace and install the Python dependencies
         run: |
           cd zephyr-workspace
-          west init -l nrf
+          west init -l ncs-zigbee
           west update --narrow -o=--depth=1
           pip3 install -r zephyr/scripts/requirements.txt
 
       - name: 🔨 Build Project
         run: |
           cd zephyr-workspace
-          west build nrf/samples/zigbee/ncp -b $BOARD_TARGET -Dmcuboot_EXTRA_CONF_FILE=$(pwd)/extra/mcuboot.conf
+          west build ncs-zigbee/samples/ncp -b $BOARD_TARGET -Dmcuboot_EXTRA_CONF_FILE=$(pwd)/extra/mcuboot.conf
           mv build/merged.hex build/ncp-$BOARD-$SDK_VER-$BAUDRATE.hex
 
       - name: Install adafruit-nrfutil
