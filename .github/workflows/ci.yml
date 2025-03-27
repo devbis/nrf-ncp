@@ -6,9 +6,10 @@ on:
   workflow_dispatch:
 
 env:
-  SDK_VER: v2.9.1
-  SDK_VER_HEX: "0x02090100"
-  BOARD: nrf52840dk_nrf52840
+  SDK_VER: v3.0.0-preview1
+  SDK_VER_HEX: "0x03000001"
+  BOARD: nrf52840dk
+  BOARD_TARGET: nrf52840dk/nrf52840
   BAUDRATE: 115200
 
 jobs:
@@ -73,7 +74,7 @@ jobs:
       - name: 🔨 Build Project
         run: |
           cd zephyr-workspace
-          west build nrf/samples/zigbee/ncp  -b $BOARD -Dmcuboot_EXTRA_CONF_FILE=$(pwd)/extra/mcuboot.conf
+          west build nrf/samples/zigbee/ncp -b $BOARD_TARGET -Dmcuboot_EXTRA_CONF_FILE=$(pwd)/extra/mcuboot.conf
           mv build/merged.hex build/ncp-$BOARD-$SDK_VER-$BAUDRATE.hex
 
       - name: Install adafruit-nrfutil
