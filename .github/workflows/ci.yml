@@ -56,9 +56,13 @@ jobs:
 
       - name: 🪁 Apply overlay
         run: |
-          cp zephyr-workspace/extra/$BOARD.overlay zephyr-workspace/nrf/samples/zigbee/ncp/boards/$BOARD.overlay
-          cp zephyr-workspace/extra/$BOARD.conf zephyr-workspace/nrf/samples/zigbee/ncp/boards/$BOARD.conf
-          sed -i "s/current-speed = \<[0-9]+\>;/current-speed = <$BAUDRATE>;/" zephyr-workspace/nrf/samples/zigbee/ncp/boards/$BOARD.overlay
+          mkdir -p zephyr-workspace/nrf/samples/hello_world/boards/
+          cp zephyr-workspace/extra/$BOARD.overlay zephyr-workspace/nrf/samples/hello_world/boards/$BOARD.overlay
+          cp zephyr-workspace/extra/$BOARD.conf zephyr-workspace/nrf/samples/hello_world/boards/$BOARD.conf
+          cp zephyr-workspace/extra/pm_static_$BOARD.yml zephyr-workspace/nrf/samples/hello_world/boards/pm_static_$BOARD.yml
+          cp zephyr-workspace/extra/pm_static_$BOARD.yml zephyr-workspace/nrf/samples/hello_world/pm_static.yml
+          cp zephyr-workspace/extra/pm_static_$BOARD.yml zephyr-workspace/nrf/samples/pm_static.yml
+          sed -i "s/current-speed = \<[0-9]+\>;/current-speed = <$BAUDRATE>;/" zephyr-workspace/nrf/samples/hello_world/boards/$BOARD.overlay
 
           echo -e "\n\nzb_uint32_t zb_osif_get_fw_version(void) { return ${SDK_VER_HEX}; }" >> zephyr-workspace/nrf/samples/zigbee/ncp/src/main.c
 
