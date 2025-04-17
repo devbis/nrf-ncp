@@ -18,6 +18,10 @@
 	};
 };
 
+&slot0_partition {
+    reg = <0x00001000 0x000069000>;
+};
+
 &radio {
 	fem = <&nrf_radio_fem>;
 };
