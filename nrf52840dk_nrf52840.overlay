@@ -7,7 +7,8 @@
 / {
 	chosen {
 		ncs,zigbee-uart = &uart1;
-		zephyr,console = &uart1;
+		/* zephyr,console = &uart1; */
+		zephyr,cdc-acm-uart = &uart1;
 		zephyr,code-partition = &slot0_partition;
 	};
 
