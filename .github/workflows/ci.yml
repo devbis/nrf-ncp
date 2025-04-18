@@ -67,7 +67,7 @@ jobs:
         run: |
           cp zephyr-workspace/extra/$BOARD.overlay ${APP_PATH}/$BOARD.overlay
           cp zephyr-workspace/extra/$BOARD.conf ${APP_PATH}/$BOARD.conf
-          cp zephyr-workspace/extra/pm_static_$BOARD.yml ${APP_PATH}/boards/pm_static_$BOARD.yml
+          cp zephyr-workspace/extra/pm_static_$BOARD.yml ${APP_PATH}/pm_static_$BOARD.yml
           cp zephyr-workspace/extra/pm_static_$BOARD.yml ${APP_PATH}/pm_static.yml
           cp zephyr-workspace/extra/pm_static_$BOARD.yml ${APP_PATH}/../pm_static.yml
           cp zephyr-workspace/extra/pm_static_$BOARD.yml ${APP_PATH}/../../pm_static.yml
