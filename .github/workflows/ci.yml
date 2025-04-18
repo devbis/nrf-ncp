@@ -10,6 +10,7 @@ env:
   SDK_VER_HEX: "0x02090100"
   BOARD: nrf52840dk_nrf52840
   BAUDRATE: 115200
+  APP_PATH: zephyr-workspace/zephyr/samples/hello_world
 
 jobs:
   build:
@@ -57,12 +58,13 @@ jobs:
       - name: 🪁 Apply overlay
         run: |
           mkdir -p zephyr-workspace/nrf/samples/hello_world/boards/
-          cp zephyr-workspace/extra/$BOARD.overlay zephyr-workspace/nrf/samples/hello_world/boards/$BOARD.overlay
-          cp zephyr-workspace/extra/$BOARD.conf zephyr-workspace/nrf/samples/hello_world/boards/$BOARD.conf
-          cp zephyr-workspace/extra/pm_static_$BOARD.yml zephyr-workspace/nrf/samples/hello_world/boards/pm_static_$BOARD.yml
-          cp zephyr-workspace/extra/pm_static_$BOARD.yml zephyr-workspace/nrf/samples/hello_world/pm_static.yml
-          cp zephyr-workspace/extra/pm_static_$BOARD.yml zephyr-workspace/nrf/samples/pm_static.yml
-          sed -i "s/current-speed = \<[0-9]+\>;/current-speed = <$BAUDRATE>;/" zephyr-workspace/nrf/samples/hello_world/boards/$BOARD.overlay
+          cp zephyr-workspace/extra/$BOARD.overlay ${APP_PATH}/boards/$BOARD.overlay
+          cp zephyr-workspace/extra/$BOARD.conf ${APP_PATH}/boards/$BOARD.conf
+          cp zephyr-workspace/extra/pm_static_$BOARD.yml ${APP_PATH}/boards/pm_static_$BOARD.yml
+          cp zephyr-workspace/extra/pm_static_$BOARD.yml ${APP_PATH}/pm_static.yml
+          cp zephyr-workspace/extra/pm_static_$BOARD.yml ${APP_PATH}/../pm_static.yml
+          cp zephyr-workspace/extra/pm_static_$BOARD.yml ${APP_PATH}/../../pm_static.yml
+          sed -i "s/current-speed = \<[0-9]+\>;/current-speed = <$BAUDRATE>;/" ${APP_PATH}/boards/$BOARD.overlay
 
           echo -e "\n\nzb_uint32_t zb_osif_get_fw_version(void) { return ${SDK_VER_HEX}; }" >> zephyr-workspace/nrf/samples/zigbee/ncp/src/main.c
 
@@ -77,7 +79,7 @@ jobs:
       - name: 🔨 Build Project
         run: |
           cd zephyr-workspace
-          west build zephyr/samples/hello_world -b $BOARD -Dmcuboot_EXTRA_CONF_FILE=$(pwd)/extra/mcuboot.conf -DSB_CONFIG_BOOTLOADER_MCUBOOT=y -DSB_CONFIG_MCUBOOT_MODE_FIRMWARE_UPDATER=y
+          west build zephyr/samples/hello_world -b $BOARD -Dmcuboot_EXTRA_CONF_FILE=$(pwd)/extra/mcuboot.conf -DSB_UPDATEABLE_IMAGE_NUMBER=1 -DSB_CONFIG_BOOTLOADER_MCUBOOT=y -DSB_CONFIG_MCUBOOT_MODE_FIRMWARE_UPDATER=y
           mv build/merged.hex build/ncp-$BOARD-$SDK_VER-$BAUDRATE.hex
 
       - name: Install adafruit-nrfutil
