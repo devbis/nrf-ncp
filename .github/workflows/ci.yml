@@ -55,6 +55,14 @@ jobs:
           mkdir -p zephyr-workspace
           git clone https://github.com/nrfconnect/sdk-nrf.git zephyr-workspace/nrf -b $SDK_VER --depth 1
 
+      - name: ♻️ Initialize Zephyr Workspace
+        # Set up the Zephyr workspace and install the Python dependencies
+        run: |
+          cd zephyr-workspace
+          west init -l nrf
+          west update --narrow -o=--depth=1
+          pip3 install -r zephyr/scripts/requirements.txt
+
       - name: 🪁 Apply overlay
         run: |
           cp zephyr-workspace/extra/$BOARD.overlay ${APP_PATH}/$BOARD.overlay
@@ -66,14 +74,6 @@ jobs:
           sed -i "s/current-speed = \<[0-9]+\>;/current-speed = <$BAUDRATE>;/" ${APP_PATH}/$BOARD.overlay
 
           echo -e "\n\nzb_uint32_t zb_osif_get_fw_version(void) { return ${SDK_VER_HEX}; }" >> zephyr-workspace/nrf/samples/zigbee/ncp/src/main.c
-
-      - name: ♻️ Initialize Zephyr Workspace
-        # Set up the Zephyr workspace and install the Python dependencies
-        run: |
-          cd zephyr-workspace
-          west init -l nrf
-          west update --narrow -o=--depth=1
-          pip3 install -r zephyr/scripts/requirements.txt
 
       - name: 🔨 Build Project
         run: |
