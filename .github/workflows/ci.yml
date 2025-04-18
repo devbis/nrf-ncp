@@ -57,14 +57,13 @@ jobs:
 
       - name: 🪁 Apply overlay
         run: |
-          mkdir -p zephyr-workspace/nrf/samples/hello_world/boards/
-          cp zephyr-workspace/extra/$BOARD.overlay ${APP_PATH}/boards/$BOARD.overlay
-          cp zephyr-workspace/extra/$BOARD.conf ${APP_PATH}/boards/$BOARD.conf
+          cp zephyr-workspace/extra/$BOARD.overlay ${APP_PATH}/$BOARD.overlay
+          cp zephyr-workspace/extra/$BOARD.conf ${APP_PATH}/$BOARD.conf
           cp zephyr-workspace/extra/pm_static_$BOARD.yml ${APP_PATH}/boards/pm_static_$BOARD.yml
           cp zephyr-workspace/extra/pm_static_$BOARD.yml ${APP_PATH}/pm_static.yml
           cp zephyr-workspace/extra/pm_static_$BOARD.yml ${APP_PATH}/../pm_static.yml
           cp zephyr-workspace/extra/pm_static_$BOARD.yml ${APP_PATH}/../../pm_static.yml
-          sed -i "s/current-speed = \<[0-9]+\>;/current-speed = <$BAUDRATE>;/" ${APP_PATH}/boards/$BOARD.overlay
+          sed -i "s/current-speed = \<[0-9]+\>;/current-speed = <$BAUDRATE>;/" ${APP_PATH}/$BOARD.overlay
 
           echo -e "\n\nzb_uint32_t zb_osif_get_fw_version(void) { return ${SDK_VER_HEX}; }" >> zephyr-workspace/nrf/samples/zigbee/ncp/src/main.c
 
