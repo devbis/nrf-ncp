@@ -67,7 +67,7 @@ jobs:
           sed -i "s/current-speed = \<[0-9]+\>;/current-speed = <$BAUDRATE>;/" zephyr-workspace/ncs-zigbee/samples/ncp/boards/$BOARD_TARGET_NAME.overlay
 
           echo -e "\n\nzb_uint32_t zb_osif_get_fw_version(void) { return ${NCS_ZIGBEE_VER_HEX}; }" >> zephyr-workspace/ncs-zigbee/samples/ncp/src/main.c
-          sed -i "s/net_pkt_set_txtime/\/\/ net_pkt_set_txtime/" zephyr-workspace/ncs-zigbee/subsys/osif/zb_nrf_transceiver.c
+          sed -i "s/net_pkt_set_txtime/net_pkt_set_timestamp_ns/" zephyr-workspace/ncs-zigbee/subsys/osif/zb_nrf_transceiver.c
 
       - name: ♻️ Initialize Zephyr Workspace
         # Set up the Zephyr workspace and install the Python dependencies
