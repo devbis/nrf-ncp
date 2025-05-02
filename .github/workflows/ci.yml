@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
 
 env:
-  SDK_VER: v3.0.0-preview2
-  SDK_VER_HEX: "0x03000002"
-  NCS_ZIGBEE_VER: v0.3.1
+  SDK_VER: v3.0.1
+  SDK_VER_HEX: "0x03000100"
+  NCS_ZIGBEE_VER: v0.4.0
   BOARD: nrf52840dk
   BOARD_TARGET: nrf52840dk/nrf52840
   BOARD_TARGET_NAME: nrf52840dk_nrf52840
