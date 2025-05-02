@@ -81,7 +81,7 @@ jobs:
         run: |
           cd zephyr-workspace
           west build ncs-zigbee/samples/ncp -b $BOARD_TARGET -Dmcuboot_EXTRA_CONF_FILE=$(pwd)/extra/mcuboot.conf
-          mv build/merged.hex build/ncp-$BOARD-$NCS_ZIGBEE_VER-$BAUDRATE.hex
+          mv build/merged.hex build/ncp-r23-$BOARD-$NCS_ZIGBEE_VER-$BAUDRATE.hex
 
       - name: Install adafruit-nrfutil
         run: >-
@@ -89,7 +89,7 @@ jobs:
 
       - name: 🔨 Build DFU package
         run: >-
-          adafruit-nrfutil dfu genpkg --dev-type 0x0052 --application zephyr-workspace/build/ncp-$BOARD-$NCS_ZIGBEE_VER-$BAUDRATE.hex zephyr-workspace/build/ncp-$BOARD-$NCS_ZIGBEE_VER-$BAUDRATE-dfu.zip
+          adafruit-nrfutil dfu genpkg --dev-type 0x0052 --application zephyr-workspace/build/ncp-r23-$BOARD-$NCS_ZIGBEE_VER-$BAUDRATE.hex zephyr-workspace/build/ncp-r23-$BOARD-$NCS_ZIGBEE_VER-$BAUDRATE-dfu.zip
 
       - name: 📦 Save Build Artifacts
         uses: actions/upload-artifact@v4
