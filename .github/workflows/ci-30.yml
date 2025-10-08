@@ -6,10 +6,10 @@ on:
   workflow_dispatch:
 
 env:
-  SDK_VER: v3.0.2
-  SDK_VER_HEX: "0x03000200"
-  NCS_ZIGBEE_VER: v0.4.0
-  NCS_ZIGBEE_VER_HEX: "0x00040000"
+  SDK_VER: v3.1.1
+  SDK_VER_HEX: "0x03010100"
+  NCS_ZIGBEE_VER: v1.2.0
+  NCS_ZIGBEE_VER_HEX: "0x01020000"
   BOARD: nrf52840dk
   BOARD_TARGET: nrf52840dk/nrf52840
   BOARD_TARGET_NAME: nrf52840dk_nrf52840
@@ -59,6 +59,8 @@ jobs:
           mkdir -p zephyr-workspace
           git clone https://github.com/nrfconnect/ncs-zigbee.git zephyr-workspace/ncs-zigbee -b $NCS_ZIGBEE_VER --depth 1
           sed -i "s/revision: v[0-9].[0-9].[0-9]/revision: ${SDK_VER}/g" zephyr-workspace/ncs-zigbee/west.yml
+          # fixes missing type definition which causes error on SDK 3.x
+          sed -i '/^config NRF_802154_CCA_ED_THRESHOLD$/a\	int "Energy detection threshold"' zephyr-workspace/ncs-zigbee/subsys/Kconfig
 
       - name: 🪁 Apply overlay
         run: |
