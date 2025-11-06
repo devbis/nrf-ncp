@@ -60,21 +60,8 @@ jobs:
           git clone https://github.com/nrfconnect/sdk-mcuboot.git zephyr-workspace/sdk-mcuboot --depth 1
 #          sed -i "s/revision: v[0-9].[0-9].[0-9]/revision: ${SDK_VER}/g" zephyr-workspace/sdk-mcuboot/west.yml
 
-      - name: 🪁 List dit
-        run: |
-          ls zephyr-workspace/
-          ls zephyr-workspace/sdk-mcuboot/
-          ls zephyr-workspace/sdk-mcuboot/boot/
-          ls zephyr-workspace/sdk-mcuboot/boot/zephyr/
-          ls zephyr-workspace/sdk-mcuboot/boot/zephyr/boards/
-
       - name: 🪁 Apply overlay
         run: |
-          ls zephyr-workspace/
-          ls zephyr-workspace/sdk-mcuboot/
-          ls zephyr-workspace/sdk-mcuboot/boot/
-          ls zephyr-workspace/sdk-mcuboot/boot/zephyr/
-          ls zephyr-workspace/sdk-mcuboot/boot/zephyr/boards/
           cp zephyr-workspace/extra/$BOARD_TARGET_NAME.overlay zephyr-workspace/sdk-mcuboot/boot/zephyr/boards/$BOARD_TARGET_NAME.overlay
           cp zephyr-workspace/extra/$BOARD_TARGET_NAME.conf zephyr-workspace/sdk-mcuboot/boot/zephyr/boards/$BOARD_TARGET_NAME.conf
           sed -i "s/current-speed = \<[0-9]+\>;/current-speed = <$BAUDRATE>;/" zephyr-workspace/sdk-mcuboot/boot/zephyr/boards/$BOARD_TARGET_NAME.overlay
@@ -85,14 +72,14 @@ jobs:
       - name: ♻️ Initialize Zephyr Workspace
         # Set up the Zephyr workspace and install the Python dependencies
         run: |
-          cd zephyr-workspace
-          west init -l sdk-mcuboot
-          west update --narrow -o=--depth=1
-          pip3 install -r zephyr/scripts/requirements.txt
+          cd zephyr-workspace/sdk-mcuboot
+          # west init -l sdk-mcuboot
+          # west update --narrow -o=--depth=1
+          pip3 install -r zephyr/requirements.txt
 
       - name: 🔨 Build Project
         run: |
-          cd zephyr-workspace
+          cd zephyr-workspace/sdk-mcuboot
           west build boot/zephyr -b $BOARD_TARGET
           mv build/merged.hex build/mcuboot-$BOARD-$BAUDRATE.hex
 
