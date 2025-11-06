@@ -6,9 +6,13 @@ on:
   workflow_dispatch:
 
 env:
-  SDK_VER: v2.9.2
-  SDK_VER_HEX: "0x02090200"
-  BOARD: nrf52840dk_nrf52840
+#  SDK_VER: v3.0.1
+#  SDK_VER_HEX: "0x03000100"
+#  NCS_ZIGBEE_VER: v0.4.0
+#  NCS_ZIGBEE_VER_HEX: "0x00040000"
+  BOARD: nrf52840dk
+  BOARD_TARGET: nrf52840dk/nrf52840
+  BOARD_TARGET_NAME: nrf52840dk_nrf52840
   BAUDRATE: 115200
 
 jobs:
@@ -49,40 +53,56 @@ jobs:
           tar xf zephyr-sdk-0.16.9_linux-x86_64_minimal.tar.xz -C ~/
           ~/zephyr-sdk-0.16.9/setup.sh -c -t arm-zephyr-eabi
 
+      # git clone https://github.com/nrfconnect/sdk-nrf.git zephyr-workspace/nrf -b $SDK_VER --depth 1
       - name: 🪁 Install nRF SDK
         run: |
           mkdir -p zephyr-workspace
-          git clone https://github.com/nrfconnect/sdk-nrf.git zephyr-workspace/nrf -b $SDK_VER --depth 1
+          git clone https://github.com/nrfconnect/sdk-mcuboot.git zephyr-workspace/sdk-mcuboot --depth 1
+#          sed -i "s/revision: v[0-9].[0-9].[0-9]/revision: ${SDK_VER}/g" zephyr-workspace/sdk-mcuboot/west.yml
+
+      - name: 🪁 List dit
+        run: |
+          ls zephyr-workspace/
+          ls zephyr-workspace/sdk-mcuboot/
+          ls zephyr-workspace/sdk-mcuboot/boot/
+          ls zephyr-workspace/sdk-mcuboot/boot/zephyr/
+          ls zephyr-workspace/sdk-mcuboot/boot/zephyr/boards/
 
       - name: 🪁 Apply overlay
         run: |
-          cp zephyr-workspace/extra/$BOARD.overlay zephyr-workspace/nrf/samples/zigbee/ncp/boards/$BOARD.overlay
-          cp zephyr-workspace/extra/$BOARD.conf zephyr-workspace/nrf/samples/zigbee/ncp/boards/$BOARD.conf
-          sed -i "s/current-speed = \<[0-9]+\>;/current-speed = <$BAUDRATE>;/" zephyr-workspace/nrf/samples/zigbee/ncp/boards/$BOARD.overlay
+          ls zephyr-workspace/
+          ls zephyr-workspace/sdk-mcuboot/
+          ls zephyr-workspace/sdk-mcuboot/boot/
+          ls zephyr-workspace/sdk-mcuboot/boot/zephyr/
+          ls zephyr-workspace/sdk-mcuboot/boot/zephyr/boards/
+          cp zephyr-workspace/extra/$BOARD_TARGET_NAME.overlay zephyr-workspace/sdk-mcuboot/boot/zephyr/boards/$BOARD_TARGET_NAME.overlay
+          cp zephyr-workspace/extra/$BOARD_TARGET_NAME.conf zephyr-workspace/sdk-mcuboot/boot/zephyr/boards/$BOARD_TARGET_NAME.conf
+          sed -i "s/current-speed = \<[0-9]+\>;/current-speed = <$BAUDRATE>;/" zephyr-workspace/sdk-mcuboot/boot/zephyr/boards/$BOARD_TARGET_NAME.overlay
 
-          echo -e "\n\nzb_uint32_t zb_osif_get_fw_version(void) { return ${SDK_VER_HEX}; }" >> zephyr-workspace/nrf/samples/zigbee/ncp/src/main.c
+#          echo -e "\n\nzb_uint32_t zb_osif_get_fw_version(void) { return ${NCS_ZIGBEE_VER_HEX}; }" >> zephyr-workspace/sdk-mcuboot/samples/ncp/src/main.c
+#          sed -i "s/net_pkt_set_txtime/net_pkt_set_timestamp_ns/" zephyr-workspace/sdk-mcuboot/subsys/osif/zb_nrf_transceiver.c
 
       - name: ♻️ Initialize Zephyr Workspace
         # Set up the Zephyr workspace and install the Python dependencies
         run: |
           cd zephyr-workspace
-          west init -l nrf
+          west init -l sdk-mcuboot
           west update --narrow -o=--depth=1
           pip3 install -r zephyr/scripts/requirements.txt
 
       - name: 🔨 Build Project
         run: |
           cd zephyr-workspace
-          west build nrf/samples/zigbee/ncp  -b $BOARD -Dmcuboot_EXTRA_CONF_FILE=$(pwd)/extra/mcuboot.conf
-          mv build/merged.hex build/ncp-$BOARD-$SDK_VER-$BAUDRATE.hex
+          west build boot/zephyr -b $BOARD_TARGET
+          mv build/merged.hex build/mcuboot-$BOARD-$BAUDRATE.hex
 
-      - name: Install adafruit-nrfutil
-        run: >-
-          pip install adafruit-nrfutil
-
-      - name: 🔨 Build DFU package
-        run: >-
-          adafruit-nrfutil dfu genpkg --dev-type 0x0052 --application zephyr-workspace/build/ncp-$BOARD-$SDK_VER-$BAUDRATE.hex zephyr-workspace/build/ncp-$BOARD-$SDK_VER-$BAUDRATE-dfu.zip
+#      - name: Install adafruit-nrfutil
+#        run: >-
+#          pip install adafruit-nrfutil
+#
+#      - name: 🔨 Build DFU package
+#        run: >-
+#          adafruit-nrfutil dfu genpkg --dev-type 0x0052 --application zephyr-workspace/build/ncp-r23-$BOARD-$NCS_ZIGBEE_VER-$BAUDRATE.hex zephyr-workspace/build/ncp-r23-$BOARD-$NCS_ZIGBEE_VER-$BAUDRATE-dfu.zip
 
       - name: 📦 Save Build Artifacts
         uses: actions/upload-artifact@v4
@@ -90,4 +110,4 @@ jobs:
           name: build-artifacts
           path: |
             zephyr-workspace/build/*.hex
-            zephyr-workspace/build/*-dfu.zip
+#            zephyr-workspace/build/*-dfu.zip
