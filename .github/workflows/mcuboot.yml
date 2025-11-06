@@ -69,12 +69,31 @@ jobs:
 #          echo -e "\n\nzb_uint32_t zb_osif_get_fw_version(void) { return ${NCS_ZIGBEE_VER_HEX}; }" >> zephyr-workspace/sdk-mcuboot/samples/ncp/src/main.c
 #          sed -i "s/net_pkt_set_txtime/net_pkt_set_timestamp_ns/" zephyr-workspace/sdk-mcuboot/subsys/osif/zb_nrf_transceiver.c
 
+      - name: Create minimal west.yaml for MCUboot
+        run: |
+          cd zephyr-workspace/sdk-mcuboot/boot/zephyr
+          cat > west.yml <<'EOF'
+          manifest:
+            defaults:
+              remote: zephyrproject
+            remotes:
+              - name: zephyrproject
+                url-base: https://github.com/zephyrproject-rtos
+            projects:
+              - name: zephyr
+                repo-path: zephyr
+                revision: main
+                import: true
+            self:
+              path: boot/zephyr
+          EOF
+
       - name: ♻️ Initialize Zephyr Workspace
         # Set up the Zephyr workspace and install the Python dependencies
         run: |
           cd zephyr-workspace/sdk-mcuboot
-          # west init -l sdk-mcuboot
-          # west update --narrow -o=--depth=1
+          west init -l boot/zephyr
+          west update --narrow -o=--depth=1
           pip3 install -r zephyr/requirements.txt
 
       - name: 🔨 Build Project
