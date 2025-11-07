@@ -92,7 +92,7 @@ jobs:
         # Set up the Zephyr workspace and install the Python dependencies
         run: |
           cd zephyr-workspace/sdk-mcuboot/
-          west init -l boot/zephyr
+          west init
           west update --narrow -o=--depth=1
           pip3 install -r zephyr/requirements.txt
           pip3 install jsonschema
