@@ -91,18 +91,16 @@ jobs:
       - name: ♻️ Initialize Zephyr Workspace
         # Set up the Zephyr workspace and install the Python dependencies
         run: |
-          cd zephyr-workspace/sdk-mcuboot/boot/zephyr
-          west init
+          cd zephyr-workspace/sdk-mcuboot/
+          west init -l boot/zephyr
           west update --narrow -o=--depth=1
-          cd ../..
           pip3 install -r zephyr/requirements.txt
           pip3 install jsonschema
 
       - name: 🔨 Build Project
         run: |
-          cd zephyr-workspace/sdk-mcuboot/boot/zephyr
-          west build -b $BOARD_TARGET
-          cd ../..
+          cd zephyr-workspace/sdk-mcuboot/
+          west build -b $BOARD_TARGET boot/zephyr
           find . | grep .hex
           mv build/merged.hex build/mcuboot-$BOARD-$BAUDRATE.hex
 
