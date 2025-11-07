@@ -72,7 +72,7 @@ jobs:
       - name: Create minimal west.yaml for MCUboot
         run: |
           cd zephyr-workspace/sdk-mcuboot/
-          cat > boot/zephyr/west.yml <<'EOF'
+          cat > west.yml <<'EOF'
           manifest:
             defaults:
               remote: zephyrproject
@@ -92,10 +92,10 @@ jobs:
         # Set up the Zephyr workspace and install the Python dependencies
         run: |
           cd zephyr-workspace/sdk-mcuboot/
-          west init -l boot/zephyr
-          west update --narrow -o=--depth=1
           pip3 install -r zephyr/requirements.txt
           pip3 install jsonschema
+          west init -l  
+          west update --narrow -o=--depth=1
 
       - name: 🔨 Build Project
         run: |
