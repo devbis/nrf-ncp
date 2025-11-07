@@ -70,7 +70,7 @@ jobs:
           west update --narrow -o=--depth=1
           pip3 install -r zephyr/scripts/requirements.txt
 
-      - name: 🧱 Create temporary Zephyr project for MCUboot
+      - name: 🧱 Create minimal Zephyr app for MCUboot
         run: |
           cd zephyr-workspace
           mkdir -p mcuboot-app
@@ -78,13 +78,26 @@ jobs:
           cat > mcuboot-app/CMakeLists.txt <<'EOF'
           cmake_minimum_required(VERSION 3.20.0)
           find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
-          project(mcuboot)
-          set(KCONFIG_ROOT ${ZEPHYR_MCUBOOT_MODULE_DIR}/boot/zephyr/Kconfig)
-          add_subdirectory(${ZEPHYR_MCUBOOT_MODULE_DIR})
+          project(mcuboot_app)
+          list(APPEND ZEPHYR_EXTRA_MODULES ${ZEPHYR_MCUBOOT_MODULE_DIR})
+          EOF
+
+          cat > mcuboot-app/Kconfig <<'EOF'
+          mainmenu "MCUboot app"
+          rsource "${ZEPHYR_MCUBOOT_MODULE_DIR}/boot/zephyr/Kconfig"
           EOF
 
           cat > mcuboot-app/prj.conf <<'EOF'
+          CONFIG_MCUBOOT_SERIAL=y
           CONFIG_BOOT_SERIAL_UART=y
+          CONFIG_BOOT_SERIAL_CDC_ACM=y
+          CONFIG_MCUBOOT_SERIAL_DIRECT_IMAGE_UPLOAD=y
+          CONFIG_MCUBOOT_MODE_SINGLE_APP=y
+          CONFIG_BOOT_MGMT_CUSTOM_STORAGE_ERASE=y
+          CONFIG_BOOT_SERIAL_WAIT_FOR_DFU=y
+          CONFIG_BOOT_SERIAL_WAIT_FOR_DFU_TIMEOUT=5000
+          CONFIG_ENABLE_MGMT_PERUSER=y
+          CONFIG_BOOT_MGMT_CUSTOM_IMG_LIST=y
           EOF
 
       - name: 🔨 Build MCUboot
