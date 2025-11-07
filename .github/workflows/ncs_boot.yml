@@ -70,11 +70,35 @@ jobs:
           west update --narrow -o=--depth=1
           pip3 install -r zephyr/scripts/requirements.txt
 
-      - name: 🔨 Build Project
+      - name: 🧱 Create temporary Zephyr project for MCUboot
         run: |
           cd zephyr-workspace
-          west build nrf/modules/mcuboot  -b $BOARD  -- -DCONFIG_BOOT_SERIAL_UART=y -DEXTRA_CONF_FILE=$(pwd)/extra/mcuboot.conf
-          mv build/merged.hex build/mcuboot-$BOARD-$SDK_VER-$BAUDRATE.hex
+          mkdir -p mcuboot-app
+
+          cat > mcuboot-app/CMakeLists.txt <<'EOF'
+          cmake_minimum_required(VERSION 3.20.0)
+          find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
+          project(mcuboot)
+          add_subdirectory(${ZEPHYR_MCUBOOT_MODULE_DIR})
+          EOF
+
+          cat > mcuboot-app/prj.conf <<'EOF'
+          CONFIG_BOOT_SERIAL_UART=y
+          EOF
+
+      - name: 🔨 Build MCUboot
+        run: |
+          cd zephyr-workspace
+          west build mcuboot-app \
+            -b $BOARD \
+            -- -DEXTRA_CONF_FILE=$(pwd)/extra/mcuboot.conf
+          mv build/merged.hex build/mcuboot-${BOARD}-${SDK_VER}-${BAUDRATE}.hex
+
+#      - name: 🔨 Build Project
+#        run: |
+#          cd zephyr-workspace
+#          west build nrf/modules/mcuboot  -b $BOARD  -- -DCONFIG_BOOT_SERIAL_UART=y -DEXTRA_CONF_FILE=$(pwd)/extra/mcuboot.conf
+#          mv build/merged.hex build/mcuboot-$BOARD-$SDK_VER-$BAUDRATE.hex
 
 #      - name: Install adafruit-nrfutil
 #        run: >-
