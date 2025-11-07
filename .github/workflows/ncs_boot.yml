@@ -79,6 +79,7 @@ jobs:
           cmake_minimum_required(VERSION 3.20.0)
           find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
           project(mcuboot)
+          set(KCONFIG_ROOT ${ZEPHYR_MCUBOOT_MODULE_DIR}/boot/zephyr/Kconfig)
           add_subdirectory(${ZEPHYR_MCUBOOT_MODULE_DIR})
           EOF
 
