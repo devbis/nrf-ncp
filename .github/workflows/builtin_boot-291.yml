@@ -34,7 +34,7 @@ jobs:
           sudo apt install --no-install-recommends git cmake ninja-build gperf \
             ccache dfu-util device-tree-compiler wget \
             python3-dev python3-pip python3-setuptools python3-tk python3-wheel xz-utils file \
-            make gcc gcc-multilib g++-multilib libsdl2-dev libmagic1
+            make gcc gcc-multilib g++-multilib libsdl2-dev libmagic1 unzip
 
           pip3 install west
 
@@ -75,8 +75,11 @@ jobs:
         run: |
           cd zephyr-workspace
           west build -b $BOARD --sysbuild nrf/samples/zigbee/ncp -DSB_CONFIG_BOOTLOADER_MCUBOOT=y -Dmcuboot_EXTRA_CONF_FILE=$(pwd)/extra/mcuboot.conf -Dmcuboot_DTC_OVERLAY_FILE=$(pwd)/extra/mcuboot.overlay
+          ls -l build/
+          find build
           mv build/merged.hex build/ncp-$BOARD-$SDK_VER-$BAUDRATE.hex
-          mv build/dfu_application.zip build/ncp-$BOARD-$SDK_VER-$BAUDRATE-dfu.zip
+          unzip build/dfu_application.zip ncp.signed.bin -d build/
+          mv build/ncp.signed.bin build/ncp-$BOARD-$SDK_VER-$BAUDRATE-smp.bin
 
 #      - name: 🔨 Build Project
 #        run: |
@@ -98,4 +101,4 @@ jobs:
           name: build-artifacts
           path: |
             zephyr-workspace/build/*.hex
-            zephyr-workspace/build/*-dfu.zip
+            zephyr-workspace/build/*.bin

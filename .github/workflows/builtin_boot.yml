@@ -75,8 +75,11 @@ jobs:
         run: |
           cd zephyr-workspace
           west build -b $BOARD --sysbuild nrf/samples/zigbee/ncp -DSB_CONFIG_BOOTLOADER_MCUBOOT=y -Dmcuboot_EXTRA_CONF_FILE=$(pwd)/extra/mcuboot.conf -Dmcuboot_DTC_OVERLAY_FILE=$(pwd)/extra/mcuboot.overlay
+          ls -l build/
+          find build
           mv build/merged.hex build/ncp-$BOARD-$SDK_VER-$BAUDRATE.hex
-          mv build/dfu_application.zip build/ncp-$BOARD-$SDK_VER-$BAUDRATE-dfu.zip
+          unzip build/dfu_application.zip ncp.signed.bin -d build/
+          mv build/ncp.signed.bin build/ncp-$BOARD-$SDK_VER-$BAUDRATE-smp.bin
 
 #      - name: 🔨 Build Project
 #        run: |
@@ -98,4 +101,4 @@ jobs:
           name: build-artifacts
           path: |
             zephyr-workspace/build/*.hex
-            zephyr-workspace/build/*-dfu.zip
+            zephyr-workspace/build/*.bin
