@@ -1,8 +1,8 @@
 on:
-#  pull_request:
-#    branches:
-#      - main
-#  push:
+  pull_request:
+    branches:
+      - main
+  push:
   workflow_dispatch:
 
 env:
@@ -62,9 +62,9 @@ jobs:
 
       - name: 🪁 Apply overlay
         run: |
-          cp zephyr-workspace/extra/$BOARD_TARGET_NAME.overlay zephyr-workspace/sdk-mcuboot/boot/zephyr/boards/$BOARD_TARGET_NAME.overlay
-          cp zephyr-workspace/extra/$BOARD_TARGET_NAME.conf zephyr-workspace/sdk-mcuboot/boot/zephyr/boards/$BOARD_TARGET_NAME.conf
-          sed -i "s/current-speed = \<[0-9]+\>;/current-speed = <$BAUDRATE>;/" zephyr-workspace/sdk-mcuboot/boot/zephyr/boards/$BOARD_TARGET_NAME.overlay
+          cp zephyr-workspace/extra/$BOARD_TARGET_NAME.overlay zephyr-workspace/sdk-mcuboot/samples/zephyr/hello-world/boards/$BOARD_TARGET_NAME.overlay
+          cp zephyr-workspace/extra/$BOARD_TARGET_NAME.conf zephyr-workspace/sdk-mcuboot/samples/zephyr/hello-world/boards/$BOARD_TARGET_NAME.conf
+          sed -i "s/current-speed = \<[0-9]+\>;/current-speed = <$BAUDRATE>;/" zephyr-workspace/sdk-mcuboot/samples/zephyr/hello-world/boards/$BOARD_TARGET_NAME.overlay
 
 #          echo -e "\n\nzb_uint32_t zb_osif_get_fw_version(void) { return ${NCS_ZIGBEE_VER_HEX}; }" >> zephyr-workspace/sdk-mcuboot/samples/ncp/src/main.c
 #          sed -i "s/net_pkt_set_txtime/net_pkt_set_timestamp_ns/" zephyr-workspace/sdk-mcuboot/subsys/osif/zb_nrf_transceiver.c
@@ -100,7 +100,7 @@ jobs:
       - name: 🔨 Build Project
         run: |
           cd zephyr-workspace/sdk-mcuboot/
-          west build -b $BOARD_TARGET boot/zephyr
+          west build -b $BOARD_TARGET samples/zephyr/hello-world
           find . | grep .hex
           mv build/merged.hex build/mcuboot-$BOARD-$BAUDRATE.hex
 

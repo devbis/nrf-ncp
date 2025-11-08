@@ -8,6 +8,10 @@
 	chosen {
 		ncs,zigbee-uart = &uart1;
 		zephyr,code-partition = &slot0_partition;
+
+        zephyr,console = &uart1;
+		zephyr,shell-uart = &uart1;
+		zephyr,uart-mcumgr = &uart1;
 	};
 
 	nrf_radio_fem: at2401c {
