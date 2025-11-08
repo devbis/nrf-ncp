@@ -1,0 +1,59 @@
+name: Build mcumgr-client for OpenWrt ARM
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        target:
+          - armv7-unknown-linux-musleabihf
+
+    steps:
+      - name: Checkout current repo
+        uses: actions/checkout@v4
+
+      - name: Clone mcumgr-client
+        run: |
+          git clone --depth 1 https://github.com/vouch-opensource/mcumgr-client.git
+          cd mcumgr-client
+          echo "Cloned commit:"
+          git rev-parse HEAD
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install cross toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y musl-tools gcc-arm-linux-gnueabihf
+
+      - name: Configure Cargo for cross-compilation
+        run: |
+          mkdir -p mcumgr-client/.cargo
+          cat > mcumgr-client/.cargo/config.toml <<'EOF'
+          [target.armv7-unknown-linux-musleabihf]
+          linker = "arm-linux-gnueabihf-gcc"
+          EOF
+
+      - name: Build release binary
+        working-directory: mcumgr-client
+        run: |
+          cargo build --release --target=${{ matrix.target }}
+
+      - name: Strip and prepare artifact
+        run: |
+          mkdir -p dist
+          arm-linux-gnueabihf-strip mcumgr-client/target/${{ matrix.target }}/release/mcumgr-client -o dist/mcumgr-client
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcumgr-client-${{ matrix.target }}
+          path: dist/mcumgr-client
