@@ -56,11 +56,11 @@ jobs:
 
       - name: 🪁 Apply overlay
         run: |
-          cp zephyr-workspace/extra/$BOARD.overlay zephyr-workspace/nrf/modules/mcuboot/$BOARD.overlay
-          cp zephyr-workspace/extra/$BOARD.conf zephyr-workspace/nrf/modules/mcuboot/$BOARD.conf
-          sed -i "s/current-speed = \<[0-9]+\>;/current-speed = <$BAUDRATE>;/" zephyr-workspace/nrf/modules/mcuboot/$BOARD.overlay
+          cp zephyr-workspace/extra/$BOARD.overlay zephyr-workspace/nrf/samples/zigbee/ncp/boards/$BOARD.overlay
+          cp zephyr-workspace/extra/$BOARD.conf zephyr-workspace/nrf/samples/zigbee/ncp/boards/$BOARD.conf
+          sed -i "s/current-speed = \<[0-9]+\>;/current-speed = <$BAUDRATE>;/" zephyr-workspace/nrf/samples/zigbee/ncp/boards/$BOARD.overlay
 
-#          echo -e "\n\nzb_uint32_t zb_osif_get_fw_version(void) { return ${SDK_VER_HEX}; }" >> zephyr-workspace/nrf/samples/zigbee/ncp/src/main.c
+          echo -e "\n\nzb_uint32_t zb_osif_get_fw_version(void) { return ${SDK_VER_HEX}; }" >> zephyr-workspace/nrf/samples/zigbee/ncp/src/main.c
 
       - name: ♻️ Initialize Zephyr Workspace
         # Set up the Zephyr workspace and install the Python dependencies
