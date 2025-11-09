@@ -12,6 +12,19 @@
 		zephyr,code-partition = &slot0_partition;
 	};
 
+    aliases {
+		mcuboot-button0 = &mcuboot_button0;
+	};
+
+	buttons {
+		compatible = "gpio-keys";
+		mcuboot_button0: mcuboot_button0 {
+			label = "MCUBoot";
+			gpios = <&gpio0 22 GPIO_ACTIVE_HIGH>;
+			status = "okay";
+		};
+	};
+
 	nrf_radio_fem: at2401c {
 		compatible = "skyworks,sky66112-11", "generic-fem-two-ctrl-pins";
 		ctx-gpios = <&gpio1 4 GPIO_ACTIVE_HIGH>;
