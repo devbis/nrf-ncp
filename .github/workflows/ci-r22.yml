@@ -10,6 +10,7 @@ env:
   SDK_VER_HEX: "0x02090200"
   BOARD: nrf52840dk_nrf52840
   BAUDRATE: 115200
+  MCUBOOT_BAUDRATE: 1000000
 
 jobs:
   build-r22:
@@ -59,6 +60,7 @@ jobs:
           cp zephyr-workspace/extra/$BOARD.overlay zephyr-workspace/nrf/samples/zigbee/ncp/boards/$BOARD.overlay
           cp zephyr-workspace/extra/$BOARD.conf zephyr-workspace/nrf/samples/zigbee/ncp/boards/$BOARD.conf
           sed -i "s/current-speed = \<[0-9]+\>;/current-speed = <$BAUDRATE>;/" zephyr-workspace/nrf/samples/zigbee/ncp/boards/$BOARD.overlay
+          sed -i "s/current-speed = \<[0-9]+\>;/current-speed = <$MCUBOOT_BAUDRATE>;/" zephyr-workspace/extra/mcuboot.overlay
 
           echo -e "\n\nzb_uint32_t zb_osif_get_fw_version(void) { return ${SDK_VER_HEX}; }" >> zephyr-workspace/nrf/samples/zigbee/ncp/src/main.c
 
@@ -73,16 +75,10 @@ jobs:
       - name: 🔨 Build Project
         run: |
           cd zephyr-workspace
-          west build nrf/samples/zigbee/ncp  -b $BOARD -Dmcuboot_EXTRA_CONF_FILE=$(pwd)/extra/mcuboot.conf
-          mv build/merged.hex build/ncp-r22-$BOARD-$SDK_VER-$BAUDRATE.hex
-
-      - name: Install adafruit-nrfutil
-        run: >-
-          pip install adafruit-nrfutil
-
-      - name: 🔨 Build DFU package
-        run: >-
-          adafruit-nrfutil dfu genpkg --dev-type 0x0052 --application zephyr-workspace/build/ncp-r22-$BOARD-$SDK_VER-$BAUDRATE.hex zephyr-workspace/build/ncp-r22-$BOARD-$SDK_VER-$BAUDRATE-dfu.zip
+          west build -b $BOARD --sysbuild nrf/samples/zigbee/ncp -DSB_CONFIG_BOOTLOADER_MCUBOOT=y -Dmcuboot_EXTRA_CONF_FILE=$(pwd)/extra/mcuboot.conf -Dmcuboot_DTC_OVERLAY_FILE=$(pwd)/extra/mcuboot.overlay
+          mv build/merged.hex build/ncp-r22-$BOARD-$SDK_VER-$BAUDRATE-mcuboot-$MCUBOOT_BAUDRATE.hex
+          unzip build/dfu_application.zip ncp.signed.bin -d build/
+          mv build/ncp.signed.bin build/ncp-r22-$BOARD-$SDK_VER-$BAUDRATE.bin
 
       - name: 📦 Save Build Artifacts
         uses: actions/upload-artifact@v4
@@ -90,4 +86,4 @@ jobs:
           name: build-artifacts
           path: |
             zephyr-workspace/build/*.hex
-            zephyr-workspace/build/*-dfu.zip
+            zephyr-workspace/build/*.bin

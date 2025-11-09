@@ -1,0 +1,100 @@
+/*
+ * Copyright (c) 2021-2022 Nordic Semiconductor ASA
+ *
+ * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ */
+
+/ {
+	chosen {
+		zephyr,console = &uart1;
+		zephyr,shell-uart = &uart1;
+		zephyr,uart-mcumgr = &uart1;
+		zephyr,code-partition = &slot0_partition;
+	};
+
+    aliases {
+		mcuboot-button0 = &mcuboot_button0;
+	};
+
+	buttons {
+		compatible = "gpio-keys";
+		mcuboot_button0: mcuboot_button0 {
+			label = "MCUBoot";
+			gpios = <&gpio0 22 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			status = "okay";
+		};
+	};
+
+	nrf_radio_fem: at2401c {
+		compatible = "skyworks,sky66112-11", "generic-fem-two-ctrl-pins";
+		ctx-gpios = <&gpio1 4 GPIO_ACTIVE_HIGH>;
+		crx-gpios = <&gpio1 2 GPIO_ACTIVE_HIGH>;
+		rx-gain-db = <5>;
+	};
+};
+
+/* Remove default partitions */
+
+/delete-node/ &boot_partition;
+/delete-node/ &slot0_partition;
+/delete-node/ &slot1_partition;
+
+&flash0 {
+	partitions {
+	compatible = "fixed-partitions";
+	#address-cells = <1>;
+	#size-cells = <1>;
+
+boot_partition: partition@0 {
+	label = "mcuboot";
+	reg = <0x00000000 DT_SIZE_K(64)>; // 64KB bootloader partition
+	read-only;
+};
+
+slot0_partition: partition@10000 {
+	label = "image-0";
+	reg = <0x00010000 DT_SIZE_K(448)>; // 448KB application slot 0
+};
+
+slot1_partition: partition@80000 {
+	label = "image-1";
+	reg = <0x00080000 DT_SIZE_K(448)>; // 448KB application slot 1 for updates
+};
+
+scratch_partition: partition@f0000 {
+	label = "image-scratch";
+	reg = <0x000F0000 DT_SIZE_K(64)>; // 64KB scratch partition for image swapping
+		};
+	};
+};
+
+&radio {
+	fem = <&nrf_radio_fem>;
+};
+
+&uart1 {
+	pinctrl-0 = <&uart1_default_alt>;
+	pinctrl-1 = <&uart1_sleep_alt>;
+	pinctrl-names = "default", "sleep";
+    current-speed = <1000000>;
+	status = "okay";
+};
+
+&reg1 {
+	regulator-initial-mode = <NRF5X_REG_MODE_LDO>;
+};
+
+&pinctrl {
+	uart1_default_alt: uart1_default_alt {
+		group1 {
+			psels = <NRF_PSEL(UART_TX, 0, 14)>, <NRF_PSEL(UART_RX, 0, 16)>;
+		};
+	};
+
+	uart1_sleep_alt: uart1_sleep_alt {
+		group1 {
+			psels = <NRF_PSEL(UART_TX, 0, 14)>, <NRF_PSEL(UART_RX, 0, 16)>;
+			low-power-enable;
+		};
+	};
+};
