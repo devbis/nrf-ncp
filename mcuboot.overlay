@@ -20,7 +20,7 @@
 		compatible = "gpio-keys";
 		mcuboot_button0: mcuboot_button0 {
 			label = "MCUBoot";
-			gpios = <&gpio0 22 GPIO_ACTIVE_HIGH>;
+			gpios = <&gpio0 22 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
 			status = "okay";
 		};
 	};
