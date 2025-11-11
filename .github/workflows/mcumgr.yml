@@ -1,4 +1,4 @@
-name: Build mcumgr-client for OpenWrt ARM
+name: Build tiny mcumgr-client for OpenWrt ARM
 
 on:
   workflow_dispatch:
@@ -32,7 +32,7 @@ jobs:
       - name: Install cross toolchain
         run: |
           sudo apt-get update
-          sudo apt-get install -y musl-tools gcc-arm-linux-gnueabihf
+          sudo apt-get install -y musl-tools gcc-arm-linux-gnueabihf fakeroot
 
       - name: Configure Cargo for cross-compilation
         run: |
@@ -40,20 +40,59 @@ jobs:
           cat > mcumgr-client/.cargo/config.toml <<'EOF'
           [target.armv7-unknown-linux-musleabihf]
           linker = "arm-linux-gnueabihf-gcc"
+          rustflags = [
+            "-C", "opt-level=z",        # минимальный размер
+            "-C", "lto=true",           # link-time optimization
+            "-C", "strip=symbols",      # убрать символы
+            "-C", "panic=abort",        # убрать unwind
+            "-C", "embed-bitcode=no",
+            "-C", "codegen-units=1",
+            "-C", "link-arg=-s",        # ещё раз убрать символы
+            "-C", "link-arg=-Wl,--gc-sections", # удалить неиспользуемые секции
+          ]
           EOF
 
-      - name: Build release binary
+      - name: Optimize release profile
+        run: |
+          cat >> mcumgr-client/Cargo.toml <<'EOF'
+
+          [profile.release]
+          opt-level = "z"
+          lto = true
+          panic = "abort"
+          codegen-units = 1
+          strip = true
+          EOF
+
+      - name: Build ultra-small static binary
         working-directory: mcumgr-client
         run: |
+          RUSTFLAGS="-C target-feature=+crt-static" \
           cargo build --release --target=${{ matrix.target }}
 
-      - name: Strip and prepare artifact
+      - name: Strip and compress
         run: |
-          mkdir -p dist
-          arm-linux-gnueabihf-strip mcumgr-client/target/${{ matrix.target }}/release/mcumgr-client -o dist/mcumgr-client
+          mkdir -p dist/usr/bin
+          arm-linux-gnueabihf-strip mcumgr-client/target/${{ matrix.target }}/release/mcumgr-client -o dist/usr/bin/mcumgr-client
+          upx --best --lzma dist/usr/bin/mcumgr-client || true
 
-      - name: Upload artifact
+      - name: Create OpenWrt .ipk package
+        run: |
+          mkdir -p dist/CONTROL
+          cat > dist/CONTROL/control <<'EOF'
+          Package: mcumgr-client
+          Version: 1.0.0
+          Architecture: armv7
+          Maintainer: GitHub Actions <noreply@github.com>
+          Section: utils
+          Priority: optional
+          Description: Minimal mcumgr command-line client for OpenWrt ARM
+          EOF
+
+          fakeroot sh -c 'cd dist && tar czf control.tar.gz CONTROL && tar czf data.tar.gz usr && echo 2.0 > debian-binary && ar r ../mcumgr-client.ipk debian-binary control.tar.gz data.tar.gz'
+
+      - name: Upload .ipk artifact
         uses: actions/upload-artifact@v4
         with:
-          name: mcumgr-client-${{ matrix.target }}
-          path: dist/mcumgr-client
+          name: mcumgr-client-openwrt-arm-tiny
+          path: mcumgr-client.ipk
