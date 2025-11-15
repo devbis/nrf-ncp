@@ -61,7 +61,21 @@ jobs:
           cp zephyr-workspace/extra/$BOARD.conf zephyr-workspace/nrf/samples/zigbee/ncp/boards/$BOARD.conf
           sed -i "s/current-speed = \<[0-9]+\>;/current-speed = <$BAUDRATE>;/" zephyr-workspace/nrf/samples/zigbee/ncp/boards/$BOARD.overlay
           sed -i "s/current-speed = \<[0-9]+\>;/current-speed = <$MCUBOOT_BAUDRATE>;/" zephyr-workspace/extra/mcuboot.overlay
+          
+          HEX=${SDK_VER_HEX#0x}
 
+          VERSION_MAJOR=$(( 0x${HEX:0:2} ))
+          VERSION_MINOR=$(( 0x${HEX:2:2} ))
+          PATCHLEVEL=$(( 0x${HEX:4:2} ))
+          VERSION_TWEAK=$(( 0x${HEX:6:2} ))
+      
+          cat <<EOF > zephyr-workspace/nrf/samples/zigbee/ncp/VERSION
+          VERSION_MAJOR = $VERSION_MAJOR
+          VERSION_MINOR = $VERSION_MINOR
+          PATCHLEVEL = $PATCHLEVEL
+          VERSION_TWEAK = $VERSION_TWEAK
+          EXTRAVERSION = r22
+          EOF
           echo -e "\n\nzb_uint32_t zb_osif_get_fw_version(void) { return ${SDK_VER_HEX}; }" >> zephyr-workspace/nrf/samples/zigbee/ncp/src/main.c
 
       - name: ♻️ Initialize Zephyr Workspace
