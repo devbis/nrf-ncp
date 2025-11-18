@@ -13,14 +13,15 @@
 	};
 
     aliases {
-		mcuboot-button0 = &mcuboot_button0;
+		mcuboot-button0 = &button3;
 	};
 
 	buttons {
 		compatible = "gpio-keys";
-		mcuboot_button0: mcuboot_button0 {
-			label = "MCUBoot";
+		button3: button_3 {
 			gpios = <&gpio0 22 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "GPIO_BTN_3";
+			zephyr,code = <INPUT_KEY_3>;
 			status = "okay";
 		};
 	};

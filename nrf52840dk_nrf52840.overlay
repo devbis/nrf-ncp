@@ -7,19 +7,66 @@
 / {
 	chosen {
 		ncs,zigbee-uart = &uart1;
+        zephyr,console = &uart1;
+		zephyr,shell-uart = &uart1;
 		zephyr,code-partition = &slot0_partition;
+		ncs,zigbee-timer = &timer2;
+	};
+
+    aliases {
+		mcuboot-button0 = &button3;
+
+		/delete-property/ pwm-led0;
+		/delete-property/ led0;
+		/delete-property/ led1;
+		/delete-property/ led2;
+		/delete-property/ led3;
+		/delete-property/ sw0;
+		/delete-property/ sw1;
+		/delete-property/ sw2;
+		/delete-property/ bootloader-led0;
+		/delete-property/ mcuboot-led0;
+	};
+
+	buttons {
+		compatible = "gpio-keys";
+		button3: button_3 {
+			gpios = <&gpio0 22 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "GPIO_BTN_3";
+			zephyr,code = <INPUT_KEY_3>;
+			status = "okay";
+		};
 	};
 
 	nrf_radio_fem: at2401c {
 		compatible = "skyworks,sky66112-11", "generic-fem-two-ctrl-pins";
 		ctx-gpios = <&gpio1 4 GPIO_ACTIVE_HIGH>;
 		crx-gpios = <&gpio1 2 GPIO_ACTIVE_HIGH>;
-		rx-gain-db = <5>;
 	};
+
+	/delete-node/ pwmleds;
+	/delete-node/ connector;
+	/delete-node/ analog-connector;
 };
+
+/delete-node/ &spi3;
+/delete-node/ &qspi;
+/delete-node/ &qspi_default;
+/delete-node/ &qspi_sleep;
+/delete-node/ &led0;
+/delete-node/ &led1;
+/delete-node/ &led2;
+/delete-node/ &led3;
+/delete-node/ &button0;
+/delete-node/ &button1;
+/delete-node/ &button2;
 
 &radio {
 	fem = <&nrf_radio_fem>;
+};
+
+&gpio0 {
+	gpio-reserved-ranges = <0 2>, <6 1>, <8 3>, <18 1>;
 };
 
 &uart1 {
@@ -44,6 +91,10 @@
 
 &reg1 {
 	regulator-initial-mode = <NRF5X_REG_MODE_LDO>;
+};
+
+&timer2 {
+	status = "okay";
 };
 
 &pinctrl {

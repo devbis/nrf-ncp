@@ -6,14 +6,18 @@ on:
   workflow_dispatch:
 
 env:
-  SDK_VER: v2.9.2
-  SDK_VER_HEX: "0x02090200"
-  BOARD: nrf52840dk_nrf52840
+  #SDK_VER: v3.1.1
+  #SDK_VER_HEX: "0x03010100"
+  NCS_ZIGBEE_VER: v1.2.1
+  NCS_ZIGBEE_VER_HEX: "0x01020100"
+  BOARD: nrf52840dk
+  BOARD_TARGET: nrf52840dk/nrf52840
+  BOARD_TARGET_NAME: nrf52840dk_nrf52840
   BAUDRATE: 115200
   MCUBOOT_BAUDRATE: 1000000
 
 jobs:
-  build-r22:
+  build-r23:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -50,50 +54,56 @@ jobs:
           tar xf zephyr-sdk-0.16.9_linux-x86_64_minimal.tar.xz -C ~/
           ~/zephyr-sdk-0.16.9/setup.sh -c -t arm-zephyr-eabi
 
+      # git clone https://github.com/nrfconnect/sdk-nrf.git zephyr-workspace/nrf -b $SDK_VER --depth 1
       - name: 🪁 Install nRF SDK
         run: |
           mkdir -p zephyr-workspace
-          git clone https://github.com/nrfconnect/sdk-nrf.git zephyr-workspace/nrf -b $SDK_VER --depth 1
+          git clone https://github.com/nrfconnect/ncs-zigbee.git zephyr-workspace/ncs-zigbee -b $NCS_ZIGBEE_VER --depth 1
+          # sed -i "s/revision: v[0-9].[0-9].[0-9]/revision: ${SDK_VER}/g" zephyr-workspace/ncs-zigbee/west.yml
+          # fixes missing type definition which causes error on SDK 3.x
+          # sed -i '/^config NRF_802154_CCA_ED_THRESHOLD$/a\	int "Energy detection threshold"' zephyr-workspace/ncs-zigbee/subsys/Kconfig
 
       - name: 🪁 Apply overlay
         run: |
-          cp zephyr-workspace/extra/$BOARD.overlay zephyr-workspace/nrf/samples/zigbee/ncp/boards/$BOARD.overlay
-          cp zephyr-workspace/extra/$BOARD.conf zephyr-workspace/nrf/samples/zigbee/ncp/boards/$BOARD.conf
-          sed -i "s/current-speed = \<[0-9]+\>;/current-speed = <$BAUDRATE>;/" zephyr-workspace/nrf/samples/zigbee/ncp/boards/$BOARD.overlay
+          cp zephyr-workspace/extra/$BOARD_TARGET_NAME.overlay zephyr-workspace/ncs-zigbee/samples/template/boards/$BOARD_TARGET_NAME.overlay
+          cp zephyr-workspace/extra/$BOARD_TARGET_NAME.conf zephyr-workspace/ncs-zigbee/samples/template/boards/$BOARD_TARGET_NAME.conf
+          cp zephyr-workspace/extra/router/main.c zephyr-workspace/ncs-zigbee/samples/template/src/main.c
+          sed -i "s/current-speed = \<[0-9]+\>;/current-speed = <$BAUDRATE>;/" zephyr-workspace/ncs-zigbee/samples/template/boards/$BOARD_TARGET_NAME.overlay
           sed -i "s/current-speed = \<[0-9]+\>;/current-speed = <$MCUBOOT_BAUDRATE>;/" zephyr-workspace/extra/mcuboot.overlay
-          
-          HEX=${SDK_VER_HEX#0x}
+
+          HEX=${NCS_ZIGBEE_VER_HEX#0x}
 
           VERSION_MAJOR=$(( 0x${HEX:0:2} ))
           VERSION_MINOR=$(( 0x${HEX:2:2} ))
           PATCHLEVEL=$(( 0x${HEX:4:2} ))
           VERSION_TWEAK=$(( 0x${HEX:6:2} ))
       
-          cat <<EOF > zephyr-workspace/nrf/samples/zigbee/ncp/VERSION
+          cat <<EOF > zephyr-workspace/ncs-zigbee/samples/template/VERSION
           VERSION_MAJOR = $VERSION_MAJOR
           VERSION_MINOR = $VERSION_MINOR
           PATCHLEVEL = $PATCHLEVEL
           VERSION_TWEAK = $VERSION_TWEAK
-          EXTRAVERSION = r22
+          EXTRAVERSION = r23
           EOF
           
-          echo -e "\n\nzb_uint32_t zb_osif_get_fw_version(void) { return ${SDK_VER_HEX}; }" >> zephyr-workspace/nrf/samples/zigbee/ncp/src/main.c
+          #echo -e "\n\nzb_uint32_t zb_osif_get_fw_version(void) { return ${NCS_ZIGBEE_VER_HEX}; }" >> zephyr-workspace/ncs-zigbee/samples/ncp/src/main.c
+          # sed -i "s/net_pkt_set_txtime/net_pkt_set_timestamp_ns/" zephyr-workspace/ncs-zigbee/subsys/osif/zb_nrf_transceiver.c
 
       - name: ♻️ Initialize Zephyr Workspace
         # Set up the Zephyr workspace and install the Python dependencies
         run: |
           cd zephyr-workspace
-          west init -l nrf
+          west init -l ncs-zigbee
           west update --narrow -o=--depth=1
           pip3 install -r zephyr/scripts/requirements.txt
 
       - name: 🔨 Build Project
         run: |
           cd zephyr-workspace
-          west build -b $BOARD --sysbuild nrf/samples/zigbee/ncp -DSB_CONFIG_BOOTLOADER_MCUBOOT=y -Dmcuboot_EXTRA_CONF_FILE=$(pwd)/extra/mcuboot.conf -Dmcuboot_DTC_OVERLAY_FILE=$(pwd)/extra/mcuboot.overlay
-          mv build/merged.hex build/ncp-r22-$BOARD-$SDK_VER-$BAUDRATE-mcuboot-$MCUBOOT_BAUDRATE.hex
-          unzip build/dfu_application.zip ncp.signed.bin -d build/
-          mv build/ncp.signed.bin build/ncp-r22-$BOARD-$SDK_VER-$BAUDRATE.bin
+          west build -b $BOARD_TARGET --sysbuild ncs-zigbee/samples/template -DSB_CONFIG_BOOTLOADER_MCUBOOT=y -Dmcuboot_EXTRA_CONF_FILE=$(pwd)/extra/mcuboot.conf -Dmcuboot_DTC_OVERLAY_FILE=$(pwd)/extra/mcuboot.overlay
+          mv build/merged.hex build/router-r23-$BOARD-$NCS_ZIGBEE_VER-$BAUDRATE-mcuboot-$MCUBOOT_BAUDRATE.hex
+          unzip build/dfu_application.zip -d build/
+          mv build/template.signed.bin build/router-r23-$BOARD-$NCS_ZIGBEE_VER-$BAUDRATE.bin
 
       - name: 📦 Save Build Artifacts
         uses: actions/upload-artifact@v4
